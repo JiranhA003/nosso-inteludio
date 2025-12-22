@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nosso Interlúdio</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#0b1c2d;
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:40px 20px;
+}
+
+.container{
+  width:100%;
+  max-width:1200px;
+  background:rgba(255,255,255,0.08);
+  padding:40px;
+  border-radius:28px;
+  box-shadow:0 20px 50px rgba(0,0,0,.4);
+}
+
+.title{
+  text-align:center;
+  font-size:2.2rem;
+  color:#b5b5b5;
+  margin-bottom:30px;
+}
+
+#home{
+  display:grid;
+  grid-template-columns:repeat(1,1fr);
+  gap:20px;
+}
+
+.box{
+  background:rgba(255,255,255,0.15);
+  padding:50px 10px;
+  border-radius:20px;
+  text-align:center;
+  cursor:pointer;
+  transition:.25s;
+  opacity:.35;
+}
+
+.box.liberado{opacity:1}
+
+.box:hover{
+  background:rgba(255,255,255,0.28);
+  transform:translateY(-4px);
+}
+
+#page{display:none}
+
+.media{
+  width:100%;
+  max-width:420px;
+  aspect-ratio:9/16;
+  margin:0 auto;
+  background:#000;
+  border-radius:22px;
+  overflow:hidden;
+  position:relative;
+  touch-action:pan-y;
+}
+
+iframe{width:100%;height:100%;border:none}
+
+/* SLIDESHOW */
+.slider{
+  display:flex;
+  height:100%;
+  will-change:transform;
+}
+
+.slide{
+  min-width:100%;
+  height:100%;
+}
+
+.slide img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  user-select:none;
+  pointer-events:none;
+}
+
+.back{
+  margin-top:30px;
+  display:inline-block;
+  padding:14px 32px;
+  background:rgba(255,255,255,0.18);
+  border-radius:26px;
+  cursor:pointer;
+}
+
+.timer{
+  margin-top:40px;
+  text-align:center;
+  color:#b5b5b5;
+}
+
+.timer .clock{
+  font-size:1.8rem;
+  margin-top:8px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="title">Nosso Interlúdio</div>
+
+  <div id="home"></div>
+
+  <div id="page">
+    <div class="media" id="media"></div>
+    <div class="back" onclick="goBack()">⬅ Voltar</div>
+  </div>
+
+  <div class="timer">
+    <div>Próximo dia em:</div>
+    <div class="clock" id="clock">00:00:00</div>
+  </div>
+
+</div>
+
+<audio id="slideshowAudio"></audio>
+
+<script>
+/* ================= CONFIG ================= */
+const DAY_TIME = 24*60*60*1000;
+
+/* ================= DIAS (ORDEM DEFINITIVA) ================= */
+const DAYS = [
+  ...[
+"0Bgt4EZyzAp1aGf8bZ9TmF","fFQj6uS7LPKfJnCbUd7Hwm","66Dzxya5VtKmfyqPa2FmA4",
+"iZJcgf3qjhETis8hgABSoU","xuN3c4NEJ5j3ZRoK14KQof","3JTonmuV1kk5z7u5VXPdFN",
+"0PrNcoXwGQtMHg43q7MWc4","fLxdY8hvQj5zRg5n6eFF7E","eHgJXasnoTsFTBbGPDuLHy",
+"eLtXqoi5hKpXBpn2wyrACQ","mWmVqbiwE6WiAyyuePqqXk","xsi99L5Z7VJNcpZXWNWkC7",
+"reNRAyPoLFsEURWuTqvmBE","8ohYECMw3QX2vsV4ibrN5y","sQNZ9h2KFegSx9DQRsyGtz",
+"iqdmUMXdHPXeMGg6BeN9k3","nc7wd6SGFMv45RgvEFUgr3","9phmrdawyikz2S45wjm6Jy",
+"gmp8TBFaYGbi7VYFKZErYX","hqp3xWD4YbFaY2RdCDKUoz",
+"fLY7LzrPer5sChoRVGyrX3","2YQKcNspm5HdJDyzUtmjBM",
+"sz2PH4bnVWiA8QjjWH3s8e","f1pv2gpgWcc2YAtRmpuy5K",
+"58eu2rEBGYc1xB2Sh2rDGE","4Te3NQJ1WuKbELmF4ecrtv",
+"oTodFm44j5DkHAKvHMP8v2","q3RJKx4ipBaTekTN52RW1L",
+"xiQkDEYSvtdT2HXBDHt8sA","tZJBdiu76tbViREJSh89Ph"
+].map(v=>({type:"video",src:"https://kinescope.io/embed/"+v})),
+
+  {type:"slideshow",music:"https://files.catbox.moe/pboryo.mp3",images:[
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765492739/imagem01_l79sc8.jpg",
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765492739/imagem02_b1mk8j.jpg",
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765492739/imagem03_vtxr21.jpg",
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765492740/imagem04_utybdq.jpg",
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765492741/WhatsApp_Image_2025-12-11_at_19.21.11_gkw461.jpg"
+  ]},
+
+  {type:"slideshow",music:"https://files.catbox.moe/jyi401.mp3",images:[
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765502912/WhatsApp_Image_2025-12-11_at_19.22.27_e4xhn4.jpg",
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765502913/WhatsApp_Image_2025-12-11_at_19.22.19_aiwrxm.jpg",
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765502912/WhatsApp_Image_2025-12-11_at_19.22.41_q3btim.jpg"
+  ]},
+
+  {type:"slideshow",music:"https://files.catbox.moe/hu4qpd.mp3",images:[
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765502989/WhatsApp_Image_2025-12-11_at_19.24.07_yg5iwt.jpg",
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765502989/WhatsApp_Image_2025-12-11_at_19.24.08_jgfwwf.jpg"
+  ]},
+
+  {type:"slideshow",music:"https://files.catbox.moe/jyi401.mp3",images:[
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765503082/WhatsApp_Image_2025-12-11_at_19.24.41_h6npbr.jpg",
+    "https://res.cloudinary.com/dsn6jfs5c/image/upload/v1765503084/WhatsApp_Image_2025-12-11_at_19.24.41_1_e4qurd.jpg"
+  ]},
+
+  {type:"video",src:"https://kinescope.io/embed/rMh4qVjugLP2LwJxeYPTrd"}
+];
+
+/* ================= STATE ================= */
+const home=document.getElementById("home");
+const page=document.getElementById("page");
+const media=document.getElementById("media");
+const clock=document.getElementById("clock");
+const audio=document.getElementById("slideshowAudio");
+
+let slideIndex=0;
+let slideshowStarted=false;
+
+/* ================= TIMER (INDIVIDUAL) ================= */
+let start=localStorage.getItem("start_time");
+if(!start){
+  start=Date.now();
+  localStorage.setItem("start_time",start);
+}
+start=parseInt(start);
+
+/* ================= CHEAT (RESET A CADA RELOAD) ================= */
+let cheatClicks=0;
+let cheatUnlocked=false;
+
+/* ================= HOME ================= */
+function renderHome(){
+  home.innerHTML="";
+  const liberados = cheatUnlocked
+    ? DAYS.length
+    : Math.floor((Date.now()-start)/DAY_TIME)+1;
+
+  DAYS.forEach((_,i)=>{
+    const b=document.createElement("div");
+    b.className="box"+(i<liberados?" liberado":"");
+    b.textContent="Dia "+(i+1);
+
+    b.onclick=()=>{
+      if(i===30 && !cheatUnlocked){
+        cheatClicks++;
+        if(cheatClicks>=10){
+          cheatUnlocked=true;
+          alert("✨ Todos os dias liberados ✨");
+          renderHome();
+          return;
+        }
+      }
+
+      if(i<liberados || cheatUnlocked){
+        openPage(i);
+      }else{
+        alert("Esse dia ainda não está disponível. Aguarde o cronômetro.");
+      }
+    };
+
+    home.appendChild(b);
+  });
+}
+
+/* ================= PAGE ================= */
+function openPage(i){
+  home.style.display="none";
+  page.style.display="block";
+  media.innerHTML="";
+  audio.pause();
+  slideIndex=0;
+  slideshowStarted=false;
+
+  const d=DAYS[i];
+
+  if(d.type==="video"){
+    const f=document.createElement("iframe");
+    f.src=d.src;
+    f.allow="autoplay; fullscreen";
+    media.appendChild(f);
+    return;
+  }
+
+  const slider=document.createElement("div");
+  slider.className="slider";
+
+  d.images.forEach(src=>{
+    const s=document.createElement("div");
+    s.className="slide";
+    const img=document.createElement("img");
+    img.src=src;
+    s.appendChild(img);
+    slider.appendChild(s);
+  });
+
+  media.appendChild(slider);
+  enableSwipe(slider,d.images.length,d.music);
+}
+
+/* ================= SLIDESHOW ================= */
+function enableSwipe(slider,total,music){
+  let startX=0,dx=0,drag=false;
+
+  media.onpointerdown=e=>{
+    startX=e.clientX;
+    drag=true;
+    if(!slideshowStarted){
+      audio.src=music;
+      audio.loop=true;
+      audio.play().catch(()=>{});
+      slideshowStarted=true;
+    }
+    slider.style.transition="none";
+  };
+
+  media.onpointermove=e=>{
+    if(!drag) return;
+    dx=e.clientX-startX;
+    slider.style.transform=`translateX(${dx - slideIndex*media.clientWidth}px)`;
+  };
+
+  media.onpointerup=()=>{
+    if(!drag) return;
+    drag=false;
+
+    if(dx<-60 && slideIndex<total-1) slideIndex++;
+    if(dx>60 && slideIndex>0) slideIndex--;
+
+    slider.style.transition="transform .35s ease";
+    slider.style.transform=`translateX(${-slideIndex*100}%)`;
+    dx=0;
+  };
+}
+
+/* ================= BACK ================= */
+function goBack(){
+  page.style.display="none";
+  home.style.display="grid";
+  media.innerHTML="";
+  audio.pause();
+}
+
+/* ================= CLOCK ================= */
+function updateClock(){
+  const elapsed=Date.now()-start;
+  const next=DAY_TIME-(elapsed%DAY_TIME);
+  const h=String(Math.floor(next/3600000)).padStart(2,"0");
+  const m=String(Math.floor((next%3600000)/60000)).padStart(2,"0");
+  const s=String(Math.floor((next%60000)/1000)).padStart(2,"0");
+  clock.textContent=`${h}:${m}:${s}`;
+  renderHome();
+}
+
+renderHome();
+updateClock();
+setInterval(updateClock,1000);
+</script>
+</body>
+</html>
