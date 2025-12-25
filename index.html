@@ -211,7 +211,7 @@ function renderHome(){
   home.innerHTML="";
   const liberados = cheatUnlocked
     ? DAYS.length
-    : Math.floor((Date.now()-start)/DAY_TIME)+5;
+    : Math.floor((Date.now()-start)/DAY_TIME)+6;
 
   DAYS.forEach((_,i)=>{
     const b=document.createElement("div");
@@ -335,5 +335,6 @@ setInterval(updateClock,1000);
 </script>
 </body>
 </html>
+
 
 
